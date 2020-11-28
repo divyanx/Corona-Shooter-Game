@@ -159,29 +159,12 @@ class Sanetiser(pygame.sprite.Sprite):
             self.rect.y += self.speed_y
             self.rect.x += self.speed_x
 
-        if self.sanatiser_is_hidden and pygame.time.get_ticks() - self.hide_sanatiser_timer > 1500:
+        if self.sanatiser_is_hidden and pygame.time.get_ticks() - self.hide_sanatiser_timer > 15000:
             self.sanatiser_is_hidden = False
             self.rect.centerx = random.randrange(0, WIDTH - self.rect.width)
             self.speed_y = random.randrange(5, 15)
             self.speed_x = 0
         self.boundary()
-
-#Game Functions
-def spawn_new_corona():
-    m = Corona()
-    all_corona.add(m)
-    all_sprites.add(m)
-
-def get_image(filename, colorkey = None):
-    img = pygame.image.load(path.join(img_folder,filename)).convert()
-    img.set_colorkey(colorkey)
-    return img
-def message_to_screen(message,color,font_size,x,y):
-    font = pygame.font.SysFont(font_name,font_size)
-    text = font.render(message,True,color)
-    text_rect = text.get_rect()
-    text_rect.center = (x,y)
-    screen.blit(text,text_rect)
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self,expl_size,center):
@@ -204,6 +187,25 @@ class Explosion(pygame.sprite.Sprite):
                 self.image = self.expl_size[self.current_frame]
                 self.rect = self.image.get_rect()
                 self.rect.center = old_center
+
+#Game Functions
+def spawn_new_corona():
+    m = Corona()
+    all_corona.add(m)
+    all_sprites.add(m)
+
+def get_image(filename, colorkey = None):
+    img = pygame.image.load(path.join(img_folder,filename)).convert()
+    img.set_colorkey(colorkey)
+    return img
+def message_to_screen(message,color,font_size,x,y):
+    font = pygame.font.SysFont(font_name,font_size)
+    text = font.render(message,True,color)
+    text_rect = text.get_rect()
+    text_rect.center = (x,y)
+    screen.blit(text,text_rect)
+
+
 #images
 background = get_image("background1.png",BLACK)
 background_rect = background.get_rect()
@@ -214,21 +216,23 @@ corona_img = []
 small_explosion = []
 large_explosion = []
 ship_explosion = []
+sanatised = []
 for i in range(1,11):
     img = get_image("virus{}.png".format(i),WHITE)
     corona_img.append(img)
 for i in range(11,18):
     img = get_image("virus{}.png".format(i),BLACK)
     corona_img.append(img)
-
-
+for i in range(1,9):
+    img = get_image("h{}.png".format(i), WHITE)
+    sanatised.append(pygame.transform.scale(img,(50,50)))
 for i in range(1,7):
     img = get_image("ex{}.png".format(i),WHITE)
     large_explosion.append(pygame.transform.scale(img,(80,80)))
     small_explosion.append(pygame.transform.scale(img, (40, 40)))
 for i in range(1,6):
     img = get_image("se{}.png".format(i),WHITE)
-    ship_explosion.append(pygame.transform.scale(img, (80, 80)))
+    ship_explosion.append(pygame.transform.scale(img, (60, 60)))
 #player_img =
 #player_img = get_image("playerShip.png")
 #Game sprites
@@ -277,6 +281,16 @@ while running:
         all_sprites.add(expl)
         spawn_new_corona()
         score +=  int((150 - collision.radius)/5)
+
+    get_sanatiser = pygame.sprite.collide_circle(sanatiser,player)
+    if get_sanatiser:
+        got = Explosion(sanatised,player.rect.center)
+        all_sprites.add(got)
+        sanatiser.hide_sanatiser()
+        player.health += 50
+        if player.health > 100:
+            player.health = 100
+
     #Draw/Render
     screen.blit(background,background_rect)
     all_sprites.draw(screen)
