@@ -34,6 +34,16 @@ class Player(pygame.sprite.Sprite):
         self.speed_x = 0
         self.speed = 8
         self.last_bullet_shot = pygame.time.get_ticks()
+        self.health = 100
+        self.lives = 2
+        self.hide_ship_timer = pygame.time.get_ticks()
+        self.ship_is_hidden = False
+
+    def hide_ship(self):
+        self.hide_ship_timer = pygame.time.get_ticks()
+        self.ship_is_hidden = True
+        self.rect.centerx = WIDTH/2
+        self.rect.y = -100
     def shoot_bullet(self):
         current_time  = pygame.time.get_ticks()
         if current_time - self.last_bullet_shot > 100:
@@ -59,13 +69,19 @@ class Player(pygame.sprite.Sprite):
         if keystate[pygame.K_SPACE]:
             self.shoot_bullet()
     def update(self):
+        if self.ship_is_hidden and pygame.time.get_ticks() - self.hide_ship_timer > 1500:
+            self.ship_is_hidden = False
+            self.rect.centerx = WIDTH/2
+            self.rect.bottom = HEIGHT-10
         self.movement()
         self.boundary()
 
 class Corona(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.original_image = random.choice((corona_img))
+        imsize = random.randrange(3,8)*16
+        self.original_image = pygame.transform.scale(random.choice((corona_img)),(imsize,imsize))
+        #self.image = pygame.transform.scale(bullet_img, (10, 20))
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect()
         self.radius = int(self.rect.width * .9 / 2)
@@ -161,17 +177,18 @@ corona_img = []
 small_explosion = []
 large_explosion = []
 ship_explosion = []
-# for i in range(1,6):
-#     img = get_image("virus{}.png".format(i))
-#     corona_img.append(img)
 for i in range(1,6):
-    img = get_image("player1.png",WHITE)
+    img = get_image("virus{}.png".format(i),WHITE)
     corona_img.append(img)
+
 
 for i in range(1,7):
     img = get_image("ex{}.png".format(i),WHITE)
     large_explosion.append(pygame.transform.scale(img,(80,80)))
-    small_explosion.append(pygame.transform.scale(img,(35,35)))
+    small_explosion.append(pygame.transform.scale(img, (40, 40)))
+for i in range(1,6):
+    img = get_image("se{}.png".format(i),WHITE)
+    ship_explosion.append(pygame.transform.scale(img, (80, 80)))
 #player_img =
 #player_img = get_image("playerShip.png")
 #Game sprites
@@ -197,10 +214,17 @@ while running:
     all_sprites.update()
 
     #checking ship collisions
-    corona_collision = pygame.sprite.spritecollide(player,all_corona,False,pygame.sprite.collide_circle)
-    if corona_collision:
-        running = False
-
+    corona_collision = pygame.sprite.spritecollide(player,all_corona,True,pygame.sprite.collide_circle)
+    for hit in  corona_collision:
+        expl = Explosion(small_explosion,player.rect.center)
+        all_sprites.add(expl)
+        player.health -= int(hit.radius*0.2)
+        spawn_new_corona()
+        if player.health <= 0:
+            final_explosion = Explosion(ship_explosion,player.rect.center)
+            all_sprites.add(final_explosion)
+            player.hide_ship()
+            #running = False
     #checking bullet collision
     bullet_collision = pygame.sprite.groupcollide(all_corona,all_bullets,True,True)
     for collision in bullet_collision:
@@ -212,6 +236,7 @@ while running:
     screen.blit(background,background_rect)
     all_sprites.draw(screen)
     message_to_screen("Score: "+str(score), WHITE, 24, WIDTH/2, 10)
+    message_to_screen("Health: "+str(player.health),WHITE,24,50,10)
     #Update the display
     pygame.display.update()
 pygame.quit()
