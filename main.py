@@ -177,10 +177,11 @@ while running:
     bullet_collision = pygame.sprite.groupcollide(all_corona,all_bullets,True,True)
     for collision in  bullet_collision:
         spawn_new_corona()
-
+        score +=  int(int(150 - collision.radius)//10)
     #Draw/Render
     screen.blit(background,background_rect)
     all_sprites.draw(screen)
+    message_to_screen("Score: "+str(score), WHITE, 24, WIDTH/2, 10)
     #Update the display
     pygame.display.update()
 pygame.quit()
