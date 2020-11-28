@@ -168,8 +168,8 @@ for i in range(1,6):
     img = get_image("player1.png",WHITE)
     corona_img.append(img)
 
-for i in range(1,12):
-    img = get_image("expo{}.png".format(i),WHITE)
+for i in range(1,7):
+    img = get_image("ex{}.png".format(i),WHITE)
     large_explosion.append(pygame.transform.scale(img,(80,80)))
     small_explosion.append(pygame.transform.scale(img,(35,35)))
 #player_img =
