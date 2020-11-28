@@ -227,7 +227,10 @@ while running:
             final_explosion = Explosion(ship_explosion,player.rect.center)
             all_sprites.add(final_explosion)
             player.hide_ship()
-            #running = False
+            player.health = 100
+            player.lives -= 1
+        if player.lives == 0 and not final_explosion.alive():
+            running = False
     #checking bullet collision
     bullet_collision = pygame.sprite.groupcollide(all_corona,all_bullets,True,True)
     for collision in bullet_collision:
