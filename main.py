@@ -150,7 +150,53 @@ class Corona(pygame.sprite.Sprite):
         self.rect.x += self.speed_x
         self.boundary()
         self.rotate()
+class boss_corona(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        imsize = random.randrange(2,5)*15
+        self.original_image = pygame.transform.scale(random.choice((corona_img)),(imsize,imsize))
+        #self.image = pygame.transform.scale(bullet_img, (10, 20))
+        self.image = self.original_image.copy()
+        self.rect = self.image.get_rect()
+        self.radius = int(self.rect.width * .9 / 2)
 
+        self.rect.center = mainboss.rect.center
+        self.speed_y = random.randrange(2,8)
+        self.speed_x = random.randrange(-8,8)
+
+
+        self.last_rotation = pygame.time.get_ticks()
+        self.rotation_degree = 0
+        self.rotation_speed = random.randrange(1,7)
+    def rotate(self):
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_rotation  >50:
+            self.last_rotation = current_time
+            self.rotation_degree += self.rotation_speed
+            old_center = self.rect.center
+            self.image = pygame.transform.rotate(self.original_image,self.rotation_degree)
+            self.rect = self.image.get_rect()
+
+            #pygame.draw.circle(self.image, GREEN, self.rect.center, self.radious)
+            self.rect.center = old_center
+    def spawn_new_boss(self):
+        # self.rect.x = random.randrange(0, WIDTH - self.rect.width)
+        # self.rect.y = random.randrange(-150, -100)
+        # self.speed_y = random.randrange(2, 8)
+        # self.speed_x = random.randrange(-3, 3)  # x direction motion
+
+        self.rect.center = mainboss.rect.center
+        self.speed_y = random.randrange(2, 8)
+        self.speed_x = random.randrange(-8, 8)
+
+    def boundary(self):
+         if self.rect.left >  WIDTH + 5 or self.rect.right < -5 or self.rect.top > HEIGHT + 5:
+            self.spawn_new_boss()
+    def update(self):
+        self.rect.y += self.speed_y
+        self.rect.x += self.speed_x
+        self.boundary()
+        self.rotate()
 class Bullet(pygame.sprite.Sprite):
     def __init__(self,x,y):
         pygame.sprite.Sprite.__init__(self)
@@ -220,7 +266,71 @@ class Explosion(pygame.sprite.Sprite):
                 self.image = self.expl_size[self.current_frame]
                 self.rect = self.image.get_rect()
                 self.rect.center = old_center
+class Boss(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        imsize = 200
+        self.image = pygame.transform.scale(boss_img,(imsize,int(imsize*1.3)))
+        #self.image = pygame.transform.scale(bullet_img, (10, 20))
+        self.rect = self.image.get_rect()
+        self.radius = int(self.rect.width * .9 / 2)
+        if score > 100:
+            self.rect.x = random.randrange(100,WIDTH-100)
+            self.rect.y = random.randrange(150, 200)
+            self.speed_y = random(-2,2)
+            self.speed_x = random(-3,3) # x direction motion
+        else:
+            self.rect.x = random.randrange(100,WIDTH-100)
+            self.rect.y = random.randrange(-450,-300)
+            self.speed_y = 0
+            self.speed_x = 0  #x direction motion
+        self.i = 1
+    def spawn_boss_corona(self):
+        self.currenttime = pygame.time.get_ticks()
+        if self.currenttime - self.lastfire > 5000:
+            self.rect.center = mainboss.rect.center
+        # self.rect.x = random.randrange(0, WIDTH - self.rect.width)
+        # self.rect.y = random.randrange(-150, -100)
+        # self.speed_y = random.randrange(2, 8)
+        # self.speed_x = random.randrange(-3, 3)  # x direction motion
 
+    def boundary(self):
+        if score>100:
+             if self.rect.left >  WIDTH - 100:
+                self.speed_x = random.randrange(-3,-1)
+             if  self.rect.right < 100 :
+                self.speed_x = random.randrange(1, 3)
+             if self.rect.bottom < 200:
+                 self.speed_y = random.randrange(1,3)
+             if self.rect.top > HEIGHT/2:
+                 self.speed_y = random.randrange(-3, -1)
+
+    def update(self):
+
+
+        # if score < 100:
+        #     self.rect.x = random.randrange(100,WIDTH-100)
+        #     self.rect.y = random.randrange(-400, -300)
+        #     self.speed_y = 0
+        #     self.speed_x = 0  # x direction motion
+        # else:
+        #     self.rect.x = random.randrange(100,WIDTH-100)
+        #     self.rect.y = random.randrange(150, 200)
+        #     self.speed_y = random.randrange(-2,2)
+        #     self.speed_x = random.randrange(-2,2)  # x direction motion
+        if score > 100 and self.i > 0:
+            pygame.mixer.music.load(path.join(img_folder, "boss.wav"))
+            pygame.mixer.music.play(-1)
+            self.i-=1
+            self.rect.x = random.randrange(100, WIDTH - 100)
+            self.rect.y = random.randrange(150, 200)
+            self.speed_y = random.randrange(1, 2)
+            self.speed_x = random.randrange(1, 3)  # x direction motion
+        if score > 100:
+            self.lastfire = pygame.time.get_ticks()
+        self.rect.y += self.speed_y
+        self.rect.x += self.speed_x
+        self.boundary()
 #Game Functions
 click = False
 def button(msg,x,y,w,h,ic,ac,action=None):
@@ -234,7 +344,7 @@ def button(msg,x,y,w,h,ic,ac,action=None):
             elif action == "quit":
                 pygame.quit()
             elif action == "intro":
-                print("#here2")
+                #print("#here2")
                 game_intro()
             elif action == "menu":
                 game_intro()
@@ -287,7 +397,12 @@ def spawn_new_corona():
     m = Corona()
     all_corona.add(m)
     all_sprites.add(m)
-
+    all_boss_normal.add(m)
+def span_new_boss_corona():
+    c = boss_corona()
+    all_boss_corona.add(c)
+    all_sprites.add(c)
+    all_boss_normal.add(c)
 def get_image(filename, colorkey = None):
     img = pygame.image.load(path.join(img_folder,filename)).convert()
     img.set_colorkey(colorkey)
@@ -363,6 +478,7 @@ background = get_image("background1.png",BLACK)
 background_rect = background.get_rect()
 player_img = get_image("player1.png",WHITE)  #7
 bullet_img = get_image("bullet1.png",BLACK)
+boss_img = get_image("boss.png",WHITE)
 sanatiser_img = get_image("sanatiser.png",WHITE)
 start_page_background = get_image("start_page.jpg",WHITE)
 main_menu_bg = get_image("main_menu_bg.jpg", WHITE)
@@ -393,13 +509,18 @@ for i in range(1,6):
 all_sprites = pygame.sprite.Group()
 all_corona = pygame.sprite.Group()
 all_bullets = pygame.sprite.Group()
+all_boss_corona = pygame.sprite.Group()
+all_boss_normal = pygame.sprite.Group()
 player = Player()
+mainboss = Boss()
 sanatiser = Sanetiser()
 all_sprites.add(player)
 all_sprites.add(sanatiser)
-
+all_sprites.add(mainboss)
 for i in range(9):
    spawn_new_corona()
+for i in range(10):
+   span_new_boss_corona()
 #Main Game
 def game():
     pygame.mixer.music.load(path.join(img_folder, "gamemenu.mp3"))
@@ -443,6 +564,25 @@ def game():
                 player.lives -= 1
             if player.lives <= 0:
                 game_over()
+        boss_corona_collision = pygame.sprite.spritecollide(player, all_boss_corona, True, pygame.sprite.collide_circle)
+        for hit in boss_corona_collision:
+            hit_sound.play()
+            expl = Explosion(small_explosion, player.rect.center)
+            all_sprites.add(expl)
+            player.health -= int(hit.radius * 0.2)
+            span_new_boss_corona()
+
+            # final_explosion = Explosion(ship_explosion, player.rect.center)
+            if player.health <= 0:
+                explode_sound.play()
+                final_explosion = Explosion(ship_explosion, player.rect.center)
+                all_sprites.add(final_explosion)
+                player.hide_ship()
+                player.health = 100
+                player.lives -= 1
+            if player.lives <= 0:
+                game_over()
+
         #checking bullet collision
         bullet_collision = pygame.sprite.groupcollide(all_corona,all_bullets,True,True)
         for collision in bullet_collision:
@@ -451,6 +591,13 @@ def game():
             all_sprites.add(expl)
             spawn_new_corona()
             score +=  int((100 - collision.radius)/11)
+        boss_corona_bullet_collision = pygame.sprite.groupcollide(all_boss_corona, all_bullets, True, True)
+        for collision in boss_corona_bullet_collision:
+            expl = Explosion(large_explosion, collision.rect.center)
+            virus_sound.play(200, 1000)
+            all_sprites.add(expl)
+            span_new_boss_corona()
+            score += int((100 - collision.radius) / 11)
 
         get_sanatiser = pygame.sprite.collide_circle(sanatiser,player)
         if get_sanatiser:
