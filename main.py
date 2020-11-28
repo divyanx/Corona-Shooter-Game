@@ -43,7 +43,7 @@ class Player(pygame.sprite.Sprite):
         self.hide_ship_timer = pygame.time.get_ticks()
         self.ship_is_hidden = True
         self.rect.centerx = WIDTH/2
-        self.rect.y = -100
+        self.rect.y = -1000
     def shoot_bullet(self):
         current_time  = pygame.time.get_ticks()
         if current_time - self.last_bullet_shot > 100:
@@ -79,7 +79,7 @@ class Player(pygame.sprite.Sprite):
 class Corona(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        imsize = random.randrange(3,8)*16
+        imsize = random.randrange(3,8)*19
         self.original_image = pygame.transform.scale(random.choice((corona_img)),(imsize,imsize))
         #self.image = pygame.transform.scale(bullet_img, (10, 20))
         self.image = self.original_image.copy()
@@ -91,10 +91,10 @@ class Corona(pygame.sprite.Sprite):
         self.speed_x = random.randrange(-3,3)  #x direction motion
         self.last_rotation = pygame.time.get_ticks()
         self.rotation_degree = 0
-        self.rotation_speed = 5
+        self.rotation_speed = random.randrange(1,7)
     def rotate(self):
         current_time = pygame.time.get_ticks()
-        if current_time - self.last_rotation  >200:
+        if current_time - self.last_rotation  >50:
             self.last_rotation = current_time
             self.rotation_degree += self.rotation_speed
             old_center = self.rect.center
@@ -169,7 +169,7 @@ class Explosion(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.center = old_center
 #images
-background = get_image("background.png",BLACK)
+background = get_image("background1.png",BLACK)
 background_rect = background.get_rect()
 player_img = get_image("player1.png",BLACK)  #7
 bullet_img = get_image("bullet1.png",BLACK)
@@ -177,8 +177,11 @@ corona_img = []
 small_explosion = []
 large_explosion = []
 ship_explosion = []
-for i in range(1,6):
+for i in range(1,11):
     img = get_image("virus{}.png".format(i),WHITE)
+    corona_img.append(img)
+for i in range(11,18):
+    img = get_image("virus{}.png".format(i),BLACK)
     corona_img.append(img)
 
 
@@ -231,7 +234,7 @@ while running:
         expl = Explosion(large_explosion,collision.rect.center)
         all_sprites.add(expl)
         spawn_new_corona()
-        score +=  int(150 - collision.radius)
+        score +=  int((150 - collision.radius)/5)
     #Draw/Render
     screen.blit(background,background_rect)
     all_sprites.draw(screen)
