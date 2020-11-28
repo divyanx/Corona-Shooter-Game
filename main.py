@@ -1,6 +1,7 @@
 import pygame, sys
 import random
 from os import path
+import pygame.mixer
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 RED = (255,0,0)
@@ -26,6 +27,8 @@ font = pygame.font.SysFont(None, 20)
 score = 0
 font_name = pygame.font.match_font("comicsansms")
 pause = False
+#music
+
 #Game Classes
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -226,6 +229,8 @@ def draw_text(text,fonts,color,surface,x,y):
     textrect.topleft = (x,y)
     surface.blit(textobj,textrect)
 def game_intro():
+    pygame.mixer.music.load(path.join(img_folder, "menumusic.mp3"))
+    pygame.mixer.music.play(-1)
     global click
     intro = True
     while intro:
@@ -249,11 +254,12 @@ def game_intro():
         pygame.time.Clock().tick(60)
         #largeText = pygame.font.Font('freesansbold.ttf',115)
 def new_game():
+    pygame.mixer.music.load(path.join(img_folder, "gamemenu.mp3"))
+    pygame.mixer.music.play(-1)
     global score
     score = 0
-    global life
+    player.lives = 2
     player.health = 100
-    life = 2
     game()
 def spawn_new_corona():
     m = Corona()
@@ -274,6 +280,8 @@ def text_objects(text,font):
     textsurface = font.render(text,True,WHITE)
     return textsurface,textsurface.get_rect()
 def paused():
+    pygame.mixer.music.load(path.join(img_folder, "pausemenu.mp3"))
+    pygame.mixer.music.play(-1)
     global pause
     pause = True
     while pause:
@@ -294,8 +302,35 @@ def paused():
         clock.tick(30)
 
 def unpaused():
+    pygame.mixer.music.load(path.join(img_folder, "gamemenu.mp3"))
+    pygame.mixer.music.play(-1)
     global pause
     pause = False
+
+def game_over():
+    pygame.mixer.music.load(path.join(img_folder, "gameover.mp3"))
+    pygame.mixer.music.play(-1)
+    global click
+    game_over  = True
+    while game_over:
+        screen.blit(main_menu_bg, (0, 0))
+        largetext = pygame.font.Font('freesansbold.ttf', 80)
+        TextSurf, TextRect = text_objects("GAME OVER!!", largetext)
+        TextRect.center = ((WIDTH / 2), (HEIGHT / 2 - 200))
+        screen.blit(TextSurf, TextRect)
+        button_1 = button("MAIN MENU", WIDTH / 2 - 75, HEIGHT / 2 - 50, 150, 50, BLUE, BRIGHT_BLUE, "menu")
+        button_2 = button("QUIT", WIDTH / 2 - 75, HEIGHT / 2 + 50, 150, 50, RED, BRIGHT_RED, "quit")
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    click = True
+        pygame.display.update()
+        pygame.time.Clock().tick(60)
 #images
 background = get_image("background1.png",BLACK)
 background_rect = background.get_rect()
@@ -340,6 +375,8 @@ for i in range(9):
    spawn_new_corona()
 #Main Game
 def game():
+    pygame.mixer.music.load(path.join(img_folder, "gamemenu.mp3"))
+    pygame.mixer.music.play(-1)
     global score
     global radius
     running = True
@@ -369,8 +406,8 @@ def game():
                 player.hide_ship()
                 player.health = 100
                 player.lives -= 1
-            if player.lives == 0 and not final_explosion.alive():
-                running = False
+            if player.lives <= 0 and not final_explosion.alive():
+                game_over()
         #checking bullet collision
         bullet_collision = pygame.sprite.groupcollide(all_corona,all_bullets,True,True)
         for collision in bullet_collision:
@@ -398,4 +435,5 @@ def game():
         pygame.display.update()
 
     pygame.quit()
+
 game_intro()
