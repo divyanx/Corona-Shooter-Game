@@ -27,7 +27,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(player_img,(60,60))
         #self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
-        self.radious = int(self.rect.width*.9/2)
+        self.radius = int(self.rect.width*.9/2)
         #pygame.draw.circle(self.image,GREEN,self.rect.center,self.radious)
         self.rect.centerx = WIDTH/2
         self.rect.bottom = HEIGHT - 10  #sepration between bottom and ship
@@ -68,7 +68,7 @@ class Corona(pygame.sprite.Sprite):
         self.original_image = random.choice((corona_img))
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect()
-        self.radious = int(self.rect.width * .9 / 2)
+        self.radius = int(self.rect.width * .9 / 2)
         self.rect.x = random.randrange(0,WIDTH-self.rect.width)
         self.rect.y = random.randrange(-150,-100)
         self.speed_y = random.randrange(2,8)
@@ -131,19 +131,47 @@ def message_to_screen(message,color,font_size,x,y):
     text_rect = text.get_rect()
     text_rect.center = (x,y)
     screen.blit(text,text_rect)
-
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self,expl_size,center):
+        pygame.sprite.Sprite.__init__(self)
+        self.expl_size = expl_size
+        self.image = self.expl_size[0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.last_frame = pygame.time.get_ticks()
+        self.current_frame = 0
+    def update(self):
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_frame > 40:
+            self.last_frame = current_time
+            self.current_frame +=1
+            if(self.current_frame == len(self.expl_size)):
+                self.kill()
+            else:
+                old_center = self.rect.center
+                self.image = self.expl_size[self.current_frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = old_center
 #images
 background = get_image("background.png",BLACK)
 background_rect = background.get_rect()
 player_img = get_image("player1.png",BLACK)  #7
 bullet_img = get_image("bullet1.png",BLACK)
 corona_img = []
+small_explosion = []
+large_explosion = []
+ship_explosion = []
 # for i in range(1,6):
 #     img = get_image("virus{}.png".format(i))
 #     corona_img.append(img)
 for i in range(1,6):
     img = get_image("player1.png",WHITE)
     corona_img.append(img)
+
+for i in range(1,12):
+    img = get_image("expo{}.png".format(i),WHITE)
+    large_explosion.append(pygame.transform.scale(img,(80,80)))
+    small_explosion.append(pygame.transform.scale(img,(35,35)))
 #player_img =
 #player_img = get_image("playerShip.png")
 #Game sprites
@@ -175,9 +203,11 @@ while running:
 
     #checking bullet collision
     bullet_collision = pygame.sprite.groupcollide(all_corona,all_bullets,True,True)
-    for collision in  bullet_collision:
+    for collision in bullet_collision:
+        expl = Explosion(large_explosion,collision.rect.center)
+        all_sprites.add(expl)
         spawn_new_corona()
-        score +=  int(int(150 - collision.radius)//10)
+        score +=  int(150 - collision.radius)
     #Draw/Render
     screen.blit(background,background_rect)
     all_sprites.draw(screen)
