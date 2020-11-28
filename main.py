@@ -61,8 +61,7 @@ class Player(pygame.sprite.Sprite):
 class Corona(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((30,30))
-        self.image.fill(RED)
+        self.image = random.choice((corona_img))
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(0,WIDTH-self.rect.width)
         self.rect.y = random.randrange(-150,-100)
@@ -109,8 +108,11 @@ def get_image(filename, colorkey = None):
 #images
 background = get_image("background.png")
 background_rect = background.get_rect()
-player_img = get_image("virus1.jpg",WHITE)
+player_img = get_image("player2.png",WHITE)  #7
 bullet_img = get_image("bullet1.png",BLACK)
+corona_img = []
+for i in range(1,6):
+    img = get_image("virus{}.png".format(i))
 #player_img =
 #player_img = get_image("playerShip.png")
 #Game sprites
