@@ -12,6 +12,8 @@ OLIVE = (128,128,0)
 BRIGHT_BLUE = (21,244,238)
 BRIGHT_GREEN = (102,255,0)
 BRIGHT_RED = (170,1,20)
+CHOCOLATE = (66,40,14)
+SADDLE = (139,69,19)
 #settings:
 pygame.init()
 pygame.mixer.init()
@@ -27,13 +29,19 @@ font = pygame.font.SysFont(None, 20)
 score = 0
 font_name = pygame.font.match_font("comicsansms")
 pause = False
+bullet_sound = pygame.mixer.Sound(path.join(img_folder, "shot.mp3"))
+virus_sound = pygame.mixer.Sound(path.join(img_folder, "virus.flac"))
+hit_sound= pygame.mixer.Sound(path.join(img_folder, "skill_hit.mp3"))
+explode_sound= pygame.mixer.Sound(path.join(img_folder, "DeathFlash.flac"))
+over_sound= pygame.mixer.Sound(path.join(img_folder, "gameover.wav"))
+sanatise_sound = pygame.mixer.Sound(path.join(img_folder, "enchant.ogg"))
 #music
 
 #Game Classes
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.transform.scale(player_img,(60,60))
+        self.image = pygame.transform.scale(player_img,(90,70))
         #self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         self.radius = int(self.rect.width*.9/2)
@@ -55,11 +63,12 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = -1000
     def shoot_bullet(self):
         current_time  = pygame.time.get_ticks()
-        if current_time - self.last_bullet_shot > 100:
+        if current_time - self.last_bullet_shot > 300:
             self.last_bullet_shot = current_time
             b = Bullet(self.rect.centerx, self.rect.top)
             all_bullets.add(b)
             all_sprites.add(b)
+            bullet_sound.play(100,900)
 
 
     def boundary(self):
@@ -94,10 +103,16 @@ class Corona(pygame.sprite.Sprite):
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect()
         self.radius = int(self.rect.width * .9 / 2)
-        self.rect.x = random.randrange(0,WIDTH-self.rect.width)
-        self.rect.y = random.randrange(-150,-100)
-        self.speed_y = random.randrange(2,8)
-        self.speed_x = random.randrange(-3,3)  #x direction motion
+        if score < 500:
+            self.rect.x = random.randrange(1, 10)*(WIDTH )/10 - self.rect.width
+            self.rect.y = random.randrange(-150, -100)
+            self.speed_y = 4
+            self.speed_x = 0 # x direction motion
+        else:
+            self.rect.x = random.randrange(0,WIDTH-self.rect.width)
+            self.rect.y = random.randrange(-150,-100)
+            self.speed_y = random.randrange(2,8) + score/500
+            self.speed_x = random.randrange(-1,2)  #x direction motion
         self.last_rotation = pygame.time.get_ticks()
         self.rotation_degree = 0
         self.rotation_speed = random.randrange(1,7)
@@ -113,10 +128,20 @@ class Corona(pygame.sprite.Sprite):
             #pygame.draw.circle(self.image, GREEN, self.rect.center, self.radious)
             self.rect.center = old_center
     def spawn_new_corona(self):
-        self.rect.x = random.randrange(0, WIDTH - self.rect.width)
-        self.rect.y = random.randrange(-150, -100)
-        self.speed_y = random.randrange(2, 8)
-        self.speed_x = random.randrange(-3, 3)  # x direction motion
+        # self.rect.x = random.randrange(0, WIDTH - self.rect.width)
+        # self.rect.y = random.randrange(-150, -100)
+        # self.speed_y = random.randrange(2, 8)
+        # self.speed_x = random.randrange(-3, 3)  # x direction motion
+        if score < 500:
+            self.rect.x = random.randrange(1, 10) * (WIDTH ) / 10 - self.rect.width
+            self.rect.y = random.randrange(-150, -100)
+            self.speed_y = 4
+            self.speed_x = 0  # x direction motion
+        else:
+            self.rect.x = random.randrange(0, WIDTH - self.rect.width)
+            self.rect.y = random.randrange(-150, -100)
+            self.speed_y = random.randrange(2, 8) + score / 500
+            self.speed_x = random.randrange(-1, 2)  # x direction motion
     def boundary(self):
          if self.rect.left >  WIDTH + 5 or self.rect.right < -5 or self.rect.top > HEIGHT + 5:
             self.spawn_new_corona()
@@ -125,7 +150,6 @@ class Corona(pygame.sprite.Sprite):
         self.rect.x += self.speed_x
         self.boundary()
         self.rotate()
-
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self,x,y):
@@ -210,6 +234,7 @@ def button(msg,x,y,w,h,ic,ac,action=None):
             elif action == "quit":
                 pygame.quit()
             elif action == "intro":
+                print("#here2")
                 game_intro()
             elif action == "menu":
                 game_intro()
@@ -239,17 +264,14 @@ def game_intro():
         TextSurf, TextRect = text_objects("Shoot Karona!!", largetext)
         TextRect.center = ((WIDTH / 2), (HEIGHT / 2 - 200))
         screen.blit(TextSurf, TextRect)
-        button_1 = button("START",WIDTH/2-75,HEIGHT/2-50,150,50,BLUE,BRIGHT_BLUE,"play")
-        button_2 = button("QUIT",WIDTH/2-75,HEIGHT/2+50,150,50,RED,BRIGHT_RED,"quit")
+        button("START",WIDTH/2-75,HEIGHT/2-50,150,50,BLUE,BRIGHT_BLUE,"play")
+        button("QUIT",WIDTH/2-75,HEIGHT/2+50,150,50,RED,BRIGHT_RED,"quit")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    click = True
         pygame.display.update()
         pygame.time.Clock().tick(60)
         #largeText = pygame.font.Font('freesansbold.ttf',115)
@@ -308,33 +330,38 @@ def unpaused():
     pause = False
 
 def game_over():
+    global score
+    over_sound.play()
     pygame.mixer.music.load(path.join(img_folder, "gameover.mp3"))
     pygame.mixer.music.play(-1)
     global click
     game_over  = True
     while game_over:
         screen.blit(main_menu_bg, (0, 0))
+
         largetext = pygame.font.Font('freesansbold.ttf', 80)
+        stext = pygame.font.Font('freesansbold.ttf',60)
         TextSurf, TextRect = text_objects("GAME OVER!!", largetext)
         TextRect.center = ((WIDTH / 2), (HEIGHT / 2 - 200))
+        stextSurf, stextRect = text_objects("Your Score is "+str(score),stext)
+        stextRect.center = ((WIDTH / 2), (HEIGHT / 2 - 100))
         screen.blit(TextSurf, TextRect)
-        button_1 = button("MAIN MENU", WIDTH / 2 - 75, HEIGHT / 2 - 50, 150, 50, BLUE, BRIGHT_BLUE, "menu")
-        button_2 = button("QUIT", WIDTH / 2 - 75, HEIGHT / 2 + 50, 150, 50, RED, BRIGHT_RED, "quit")
+        screen.blit(stextSurf,stextRect)
+        #print("here")
+        button("MAIN MENU", WIDTH / 2 - 75, HEIGHT / 2 - 50, 150, 50, BLUE, BRIGHT_BLUE, "intro")
+        button("QUIT", WIDTH / 2 - 75, HEIGHT / 2 + 50, 150, 50, RED, BRIGHT_RED, "quit")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    click = True
         pygame.display.update()
         pygame.time.Clock().tick(60)
 #images
 background = get_image("background1.png",BLACK)
 background_rect = background.get_rect()
-player_img = get_image("player1.png",BLACK)  #7
+player_img = get_image("player1.png",WHITE)  #7
 bullet_img = get_image("bullet1.png",BLACK)
 sanatiser_img = get_image("sanatiser.png",WHITE)
 start_page_background = get_image("start_page.jpg",WHITE)
@@ -359,7 +386,7 @@ for i in range(1,7):
     small_explosion.append(pygame.transform.scale(img, (40, 40)))
 for i in range(1,6):
     img = get_image("se{}.png".format(i),WHITE)
-    ship_explosion.append(pygame.transform.scale(img, (60, 60)))
+    ship_explosion.append(pygame.transform.scale(img, (100, 100)))
 #player_img =
 #player_img = get_image("playerShip.png")
 #Game sprites
@@ -390,35 +417,45 @@ def game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                if event.key == pygame.K_p:
+                    paused()
+                if event.key == pygame.K_x:
+                    pygame.quit()
         #Update (for our sprites)
         all_sprites.update()
 
         #checking ship collisions
         corona_collision = pygame.sprite.spritecollide(player,all_corona,True,pygame.sprite.collide_circle)
         for hit in  corona_collision:
+            hit_sound.play()
             expl = Explosion(small_explosion,player.rect.center)
             all_sprites.add(expl)
             player.health -= int(hit.radius*0.2)
             spawn_new_corona()
+
+            #final_explosion = Explosion(ship_explosion, player.rect.center)
             if player.health <= 0:
+                explode_sound.play()
                 final_explosion = Explosion(ship_explosion,player.rect.center)
                 all_sprites.add(final_explosion)
                 player.hide_ship()
                 player.health = 100
                 player.lives -= 1
-            if player.lives <= 0 and not final_explosion.alive():
+            if player.lives <= 0:
                 game_over()
         #checking bullet collision
         bullet_collision = pygame.sprite.groupcollide(all_corona,all_bullets,True,True)
         for collision in bullet_collision:
             expl = Explosion(large_explosion,collision.rect.center)
+            virus_sound.play(200, 1000)
             all_sprites.add(expl)
             spawn_new_corona()
-            score +=  int((150 - collision.radius)/5)
+            score +=  int((100 - collision.radius)/11)
 
         get_sanatiser = pygame.sprite.collide_circle(sanatiser,player)
         if get_sanatiser:
             got = Explosion(sanatised,player.rect.center)
+            sanatise_sound.play()
             all_sprites.add(got)
             sanatiser.hide_sanatiser()
             player.health += 50
@@ -429,9 +466,13 @@ def game():
         screen.blit(background,background_rect)
         all_sprites.draw(screen)
         message_to_screen("Score: "+str(score), WHITE, 24, WIDTH/2, 10)
-        message_to_screen("Health: "+str(player.health),WHITE,24,50,10)
+        message_to_screen("Health: "+str(player.health),WHITE,24,70,10)
+        message_to_screen("Life:" + str(player.lives), WHITE, 24, 178, 10)
+        message_to_screen("Playing", RED, 24, 550, 780)
+        message_to_screen("Press SPACE to shoot <- -> to move", OLIVE, 24, 139, 35)
         #Update the display
-        button("Pause(P)", 500, 0, 100, 50, BLUE, BRIGHT_BLUE, "pause")
+        button("Pause(P)", 400, 0, 100, 30, CHOCOLATE, SADDLE, "pause")
+        button("Exit(X)",500,0 ,100,30,CHOCOLATE,SADDLE,"quit")
         pygame.display.update()
 
     pygame.quit()
