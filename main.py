@@ -131,6 +131,41 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y += self.speed_y
         if self.rect.bottom < 0:
             self.kill()
+class Sanetiser(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.transform.scale(sanatiser_img,(50,90))
+        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect()
+        self.radius = int(self.rect.width * .9 / 2)
+        self.rect.x = random.randrange(0, WIDTH - self.rect.width)
+        self.rect.y = random.randrange(-150, -100)
+        self.speed_y = random.randrange(5, 15)
+        self.speed_x = random.randrange(-3, 3)  # x direction motion
+        self.last_bullet_shot = pygame.time.get_ticks()
+        self.hide_sanatiser_timer = pygame.time.get_ticks()
+        self.sanatiser_is_hidden = False
+    def hide_sanatiser(self):
+        self.hide_sanatiser_timer = pygame.time.get_ticks()
+        self.sanatiser_is_hidden = True
+        self.rect.centerx = random.randrange(0, WIDTH -self.rect.width)
+        self.rect.y = -100
+
+    def boundary(self):
+         if self.rect.left >  WIDTH + 5 or self.rect.right < -5 or self.rect.top > HEIGHT + 5:
+            self.hide_sanatiser()
+    def update(self):
+        if(self.sanatiser_is_hidden == False):
+            self.rect.y += self.speed_y
+            self.rect.x += self.speed_x
+
+        if self.sanatiser_is_hidden and pygame.time.get_ticks() - self.hide_sanatiser_timer > 1500:
+            self.sanatiser_is_hidden = False
+            self.rect.centerx = random.randrange(0, WIDTH - self.rect.width)
+            self.speed_y = random.randrange(5, 15)
+            self.speed_x = 0
+        self.boundary()
+
 #Game Functions
 def spawn_new_corona():
     m = Corona()
@@ -147,6 +182,7 @@ def message_to_screen(message,color,font_size,x,y):
     text_rect = text.get_rect()
     text_rect.center = (x,y)
     screen.blit(text,text_rect)
+
 class Explosion(pygame.sprite.Sprite):
     def __init__(self,expl_size,center):
         pygame.sprite.Sprite.__init__(self)
@@ -173,6 +209,7 @@ background = get_image("background1.png",BLACK)
 background_rect = background.get_rect()
 player_img = get_image("player1.png",BLACK)  #7
 bullet_img = get_image("bullet1.png",BLACK)
+sanatiser_img = get_image("sanatiser.png",WHITE)
 corona_img = []
 small_explosion = []
 large_explosion = []
@@ -199,7 +236,9 @@ all_sprites = pygame.sprite.Group()
 all_corona = pygame.sprite.Group()
 all_bullets = pygame.sprite.Group()
 player = Player()
+sanatiser = Sanetiser()
 all_sprites.add(player)
+all_sprites.add(sanatiser)
 
 for i in range(9):
    spawn_new_corona()
