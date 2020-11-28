@@ -22,8 +22,8 @@ img_folder = path.join(game_folder,"img")
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((50,30))
-        self.image.fill(GREEN)
+        self.image = pygame.transform.scale(player_img,(60,60))
+        #self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH/2
         self.rect.bottom = HEIGHT - 10  #sepration between bottom and ship
@@ -85,8 +85,8 @@ class Corona(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self,x,y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10,20))
-        self.image.fill(YELLOW)
+        self.image = pygame.transform.scale(bullet_img,(10,20))
+        #self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -101,14 +101,17 @@ def spawn_new_corona():
     all_corona.add(m)
     all_sprites.add(m)
 
-def get_image(filename):
+def get_image(filename, colorkey = None):
     img = pygame.image.load(path.join(img_folder,filename)).convert()
+    img.set_colorkey(colorkey)
     return img
 
 #images
 background = get_image("background.png")
 background_rect = background.get_rect()
-player_img =
+player_img = get_image("virus1.jpg",WHITE)
+bullet_img = get_image("bullet1.png",BLACK)
+#player_img =
 #player_img = get_image("playerShip.png")
 #Game sprites
 all_sprites = pygame.sprite.Group()
