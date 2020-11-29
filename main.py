@@ -16,6 +16,7 @@ CHOCOLATE = (66,40,14)
 SADDLE = (139,69,19)
 #settings:
 pygame.init()
+pygame.font.init()
 pygame.mixer.init()
 WIDTH = 600
 HEIGHT = 800
@@ -25,7 +26,7 @@ clock = pygame.time.Clock()
 FPS = 60
 game_folder = path.dirname(__file__)
 img_folder = path.join(game_folder,"img")
-font = pygame.font.SysFont(None, 20)
+fonts = pygame.font.SysFont(None, 20)
 score = 0
 font_name = pygame.font.match_font("comicsansms")
 pause = False
@@ -35,6 +36,7 @@ hit_sound= pygame.mixer.Sound(path.join(img_folder, "skill_hit.mp3"))
 explode_sound= pygame.mixer.Sound(path.join(img_folder, "DeathFlash.flac"))
 over_sound= pygame.mixer.Sound(path.join(img_folder, "gameover.wav"))
 sanatise_sound = pygame.mixer.Sound(path.join(img_folder, "enchant.ogg"))
+smalltext = pygame.font.Font('freesansbold.ttf',30)
 #music
 
 #Game Classes
@@ -339,6 +341,7 @@ class Boss(pygame.sprite.Sprite):
         self.boundary()
 #Game Functions
 click = False
+pygame.font.init()
 def button(msg,x,y,w,h,ic,ac,action=None):
     mouse = pygame.mouse.get_pos()
     clk = pygame.mouse.get_pressed()
@@ -360,7 +363,8 @@ def button(msg,x,y,w,h,ic,ac,action=None):
                 unpaused()
     else:
         pygame.draw.rect(screen,ic,(x,y,w,h))
-    smalltext = pygame.font.Font("freesansbold.ttf",20)
+    pygame.font.init()
+    smalltext = pygame.font.Font('freesansbold.ttf',20)
     textsurf, textrect = text_objects(msg,smalltext)
     textrect.center = ((x+(w/2)),(y+(h/2)))
     screen.blit(textsurf,textrect)
@@ -374,8 +378,9 @@ def game_intro():
     pygame.mixer.music.play(-1)
     global click
     intro = True
-    while intro:
+    while True:
         screen.blit(main_menu_bg,(0,0))
+        pygame.font.init()
         largetext = pygame.font.Font('freesansbold.ttf', 60)
         TextSurf, TextRect = text_objects("Shoot Karona!!", largetext)
         TextRect.center = ((WIDTH / 2), (HEIGHT / 2 - 200))
