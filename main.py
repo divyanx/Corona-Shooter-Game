@@ -63,12 +63,12 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = -1000
     def shoot_bullet(self):
         current_time  = pygame.time.get_ticks()
-        if current_time - self.last_bullet_shot > 300:
+        if current_time - self.last_bullet_shot > 200:
             self.last_bullet_shot = current_time
             b = Bullet(self.rect.centerx, self.rect.top)
             all_bullets.add(b)
             all_sprites.add(b)
-            bullet_sound.play(100,900)
+            bullet_sound.play()
 
 
     def boundary(self):
@@ -111,7 +111,7 @@ class Corona(pygame.sprite.Sprite):
         else:
             self.rect.x = random.randrange(0,WIDTH-self.rect.width)
             self.rect.y = random.randrange(-150,-100)
-            self.speed_y = random.randrange(2,8) + score/500
+            self.speed_y = random.randrange(2,8) + score/750
             self.speed_x = random.randrange(-1,2)  #x direction motion
         self.last_rotation = pygame.time.get_ticks()
         self.rotation_degree = 0
@@ -271,10 +271,11 @@ class Boss(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         imsize = 200
         self.image = pygame.transform.scale(boss_img,(imsize,int(imsize*1.3)))
+        self.hitpoint = 1000
         #self.image = pygame.transform.scale(bullet_img, (10, 20))
         self.rect = self.image.get_rect()
         self.radius = int(self.rect.width * .9 / 2)
-        if score > 100:
+        if score > 5000:
             self.rect.x = random.randrange(100,WIDTH-100)
             self.rect.y = random.randrange(150, 200)
             self.speed_y = random(-2,2)
@@ -287,7 +288,7 @@ class Boss(pygame.sprite.Sprite):
         self.i = 1
     def spawn_boss_corona(self):
         self.currenttime = pygame.time.get_ticks()
-        if self.currenttime - self.lastfire > 5000:
+        if self.currenttime - self.lastfire > 500:
             self.rect.center = mainboss.rect.center
         # self.rect.x = random.randrange(0, WIDTH - self.rect.width)
         # self.rect.y = random.randrange(-150, -100)
@@ -295,10 +296,10 @@ class Boss(pygame.sprite.Sprite):
         # self.speed_x = random.randrange(-3, 3)  # x direction motion
 
     def boundary(self):
-        if score>100:
-             if self.rect.left >  WIDTH - 100:
+        if score>5000:
+             if self.rect.left >  WIDTH - 200:
                 self.speed_x = random.randrange(-3,-1)
-             if  self.rect.right < 100 :
+             if  self.rect.right < 200 :
                 self.speed_x = random.randrange(1, 3)
              if self.rect.bottom < 200:
                  self.speed_y = random.randrange(1,3)
@@ -318,7 +319,9 @@ class Boss(pygame.sprite.Sprite):
         #     self.rect.y = random.randrange(150, 200)
         #     self.speed_y = random.randrange(-2,2)
         #     self.speed_x = random.randrange(-2,2)  # x direction motion
-        if score > 100 and self.i > 0:
+
+        if score > 5000 and self.i > 0:
+            self.hitpoint = 1000
             pygame.mixer.music.load(path.join(img_folder, "boss.wav"))
             pygame.mixer.music.play(-1)
             self.i-=1
@@ -326,10 +329,13 @@ class Boss(pygame.sprite.Sprite):
             self.rect.y = random.randrange(150, 200)
             self.speed_y = random.randrange(1, 2)
             self.speed_x = random.randrange(1, 3)  # x direction motion
-        if score > 100:
+        if score > 5000:
+            message_to_screen("Boss Hitpoint:" + str(self.hitpoint), WHITE, 24, 500, 35)
+
             self.lastfire = pygame.time.get_ticks()
         self.rect.y += self.speed_y
         self.rect.x += self.speed_x
+        pygame.display.update()
         self.boundary()
 #Game Functions
 click = False
@@ -473,6 +479,35 @@ def game_over():
                     pygame.quit()
         pygame.display.update()
         pygame.time.Clock().tick(60)
+def victory():
+    global score
+    over_sound.play()
+    pygame.mixer.music.load(path.join(img_folder, "victory.wav"))
+    pygame.mixer.music.play(-1)
+    global click
+    victry  = True
+    while victry:
+        screen.blit(main_menu_bg, (0, 0))
+
+        largetext = pygame.font.Font('freesansbold.ttf', 80)
+        stext = pygame.font.Font('freesansbold.ttf',60)
+        TextSurf, TextRect = text_objects("YOU WON", largetext)
+        TextRect.center = ((WIDTH / 2), (HEIGHT / 2 - 200))
+        stextSurf, stextRect = text_objects("Your Score is "+str(score),stext)
+        stextRect.center = ((WIDTH / 2), (HEIGHT / 2 - 100))
+        screen.blit(TextSurf, TextRect)
+        screen.blit(stextSurf,stextRect)
+        #print("here")
+        button("MAIN MENU", WIDTH / 2 - 75, HEIGHT / 2 - 50, 150, 50, BLUE, BRIGHT_BLUE, "intro")
+        button("QUIT", WIDTH / 2 - 75, HEIGHT / 2 + 50, 150, 50, RED, BRIGHT_RED, "quit")
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+        pygame.display.update()
+        pygame.time.Clock().tick(60)
 #images
 background = get_image("background1.png",BLACK)
 background_rect = background.get_rect()
@@ -598,6 +633,22 @@ def game():
             all_sprites.add(expl)
             span_new_boss_corona()
             score += int((100 - collision.radius) / 11)
+        boss_bullet_collision = pygame.sprite.spritecollide(mainboss,all_bullets,True,pygame.sprite.collide_circle)
+        for hit in  boss_bullet_collision:
+            hit_sound.play()
+            expl = Explosion(ship_explosion,mainboss.rect.center)
+            all_sprites.add(expl)
+            player.health -= int(hit.radius*0.2)
+            mainboss.hitpoint -= 20
+
+            #final_explosion = Explosion(ship_explosion, player.rect.center)
+
+            if mainboss.hitpoint <= 0:
+                explode_sound.play()
+                final_explosion = Explosion(ship_explosion,mainboss.rect.center)
+                all_sprites.add(final_explosion)
+                explode_sound.play()
+                victory()
 
         get_sanatiser = pygame.sprite.collide_circle(sanatiser,player)
         if get_sanatiser:
