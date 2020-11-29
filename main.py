@@ -474,7 +474,7 @@ def game_over():
         screen.blit(TextSurf, TextRect)
         screen.blit(stextSurf,stextRect)
         #print("here")
-        button("MAIN MENU", WIDTH / 2 - 75, HEIGHT / 2 - 50, 150, 50, BLUE, BRIGHT_BLUE, "intro")
+        button("DIVE BACK IN", WIDTH / 2 - 75, HEIGHT / 2 - 50, 150, 50, BLUE, BRIGHT_BLUE, "intro")
         button("QUIT", WIDTH / 2 - 75, HEIGHT / 2 + 50, 150, 50, RED, BRIGHT_RED, "quit")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -503,7 +503,7 @@ def victory():
         screen.blit(TextSurf, TextRect)
         screen.blit(stextSurf,stextRect)
         #print("here")
-        button("MAIN MENU", WIDTH / 2 - 75, HEIGHT / 2 - 50, 150, 50, BLUE, BRIGHT_BLUE, "intro")
+        button("DIVE BACK IN", WIDTH / 2 - 75, HEIGHT / 2 - 50, 150, 50, BLUE, BRIGHT_BLUE, "intro")
         button("QUIT", WIDTH / 2 - 75, HEIGHT / 2 + 50, 150, 50, RED, BRIGHT_RED, "quit")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
